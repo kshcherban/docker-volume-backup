@@ -13,6 +13,6 @@ else
 fi
 
 echo "Creating backup of $VOLUME"
-docker run --rm -ti -e USER_ID=$(id -u) -v ${BACKUP_DST}:/opt -v ${VOLUME}:/backup:ro volume-backup backup
+docker run --rm -e USER_ID=$(id -u) -v ${BACKUP_DST}:/opt -v ${VOLUME}:/backup:ro volume-backup backup
 mv ${BACKUP_DST}/backup.tar.zst ${BACKUP_DST}/${VOLUME}_backup.tar.zst
 echo "Backup saved in ${BACKUP_DST}/${VOLUME}_backup.tar.zst"

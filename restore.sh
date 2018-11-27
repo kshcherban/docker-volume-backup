@@ -23,5 +23,5 @@ echo "Creating docker volume $VOLUME"
 docker volume create $VOLUME || true
 
 echo "Restoring ${BACKUP_FILE} inside $VOLUME"
-docker run --rm -ti -v ${BACKUP_FILE}:/opt/backup.tar.zst -v ${VOLUME}:/backup volume-backup restore
+docker run --rm -v ${BACKUP_FILE}:/opt/backup.tar.zst -v ${VOLUME}:/backup volume-backup restore
 echo "Backup restored"
