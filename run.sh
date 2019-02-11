@@ -4,11 +4,11 @@
 # S3_BUCKET - s3://mybucket/path/to/backups - s3 path where to store backups, if empty s3 upload will not happen
 # BACKUP_PATH - path to store backup files, defaults to ${HOME}/backups
 # VOLUME_REGEXP - regexp for volumes to backup, default *, which means all
-# CLEANUP_OLD - cleanup old backups, defaults to true
+# CLEANUP_OLD - cleanup old backups, defaults to false
 
 BACKUP_PATH="${BACKUP_PATH:-$HOME/backups}"
-VOLUME_REGEXP="${VOLUME_REGEXP:-*}"
-CLEANUP_OLD="${CLEANUP_OLD:-true}"
+VOLUME_REGEXP="${VOLUME_REGEXP:-.*}"
+CLEANUP_OLD="${CLEANUP_OLD:-false}"
 
 TODAY="$(date +%Y-%m-%d)"
 
@@ -24,7 +24,7 @@ fi
 mkdir -p ${BACKUP_PATH}/${TODAY}
 
 echo "** Creating backup for $TODAY"
-for VOLUME in $(docker volume ls --format {{.Name}} | grep $VOLUME_REGEXP); do
+for VOLUME in $(docker volume ls --format {{.Name}} | grep "$VOLUME_REGEXP"); do
     make backup VOLUME=${VOLUME} BACKUP=${BACKUP_PATH}/${TODAY}
 done
 
@@ -37,5 +37,12 @@ fi
 
 if [ $CLEANUP_OLD == "true" ]; then
     echo "** Cleaning up"
-    find $BACKUP_PATH ! -name "*$TODAY*" -exec rm -v {} +
+    # Stupid check for wrong files deletion
+    # TODO implement proper cleanup
+    if [ "$BACKUP_PATH" == "/" ]; then
+        echo "** ERROR backup path is /, may delete wrong files"
+        exit 1
+    else
+        find $BACKUP_PATH -mindepth 1 -type d ! -name "*$TODAY*" -exec rm -rfv {} +
+    fi
 fi
