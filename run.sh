@@ -30,8 +30,8 @@ done
 
 if [ x"$S3_BUCKET" != x ]; then
     echo "** Uploading to S3 $S3_BUCKET"
-    for f in ${BACKUP_PATH}/${TODAY}/*; do
-        aws s3 cp $f ${S3_BUCKET}/$f
+    for f in $(ls ${BACKUP_PATH}/${TODAY}/); do
+        aws s3 cp --quiet ${BACKUP_PATH}/${TODAY}/$f ${S3_BUCKET}/$f
     done
 fi
 
