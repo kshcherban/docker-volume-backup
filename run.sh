@@ -31,7 +31,7 @@ done
 if [ x"$S3_BUCKET" != x ]; then
     echo "** Uploading to S3 $S3_BUCKET"
     for f in $(ls ${BACKUP_PATH}/${TODAY}/); do
-        aws s3 cp --quiet ${BACKUP_PATH}/${TODAY}/$f ${S3_BUCKET}/$f
+        aws s3 cp --quiet ${BACKUP_PATH}/${TODAY}/$f ${S3_BUCKET}/${TODAY}/$f
     done
 fi
 
@@ -46,3 +46,6 @@ if [ $CLEANUP_OLD == "true" ]; then
         find $BACKUP_PATH -mindepth 1 -type d ! -name "*$TODAY*" -exec rm -rfv {} +
     fi
 fi
+
+echo "** INFO backup finished successfully!"
+aws s3 ls ${S3_BUCKET}/${TODAY}/
