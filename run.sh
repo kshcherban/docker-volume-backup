@@ -12,40 +12,44 @@ CLEANUP_OLD="${CLEANUP_OLD:-false}"
 
 TODAY="$(date +%Y-%m-%d)"
 
+function logger() {
+    echo "$(date +"%h %d %H:%M:%S") $@"
+}
+
 # go to script source directory to execute make commands
 cd $(dirname $0)
 
 # check if backup image exists or create it
 if ! (docker image inspect volume-backup &> /dev/null); then
-    echo "** Building docker image helper"
+    logger "INFO: building docker image helper"
     make build
 fi
 
 mkdir -p ${BACKUP_PATH}/${TODAY}
 
-echo "** Creating backup for $TODAY"
+logger "INFO: creating backup for $TODAY"
 for VOLUME in $(docker volume ls --format {{.Name}} | grep "$VOLUME_REGEXP"); do
     make backup VOLUME=${VOLUME} BACKUP=${BACKUP_PATH}/${TODAY}
 done
 
 if [ x"$S3_BUCKET" != x ]; then
-    echo "** Uploading to S3 $S3_BUCKET"
+    logger "INFO: uploading to S3 $S3_BUCKET"
     for f in $(ls ${BACKUP_PATH}/${TODAY}/); do
         aws s3 cp --quiet ${BACKUP_PATH}/${TODAY}/$f ${S3_BUCKET}/${TODAY}/$f
     done
 fi
 
 if [ $CLEANUP_OLD == "true" ]; then
-    echo "** Cleaning up"
+    logger "INFO: cleaning up"
     # Stupid check for wrong files deletion
     # TODO implement proper cleanup
     if [ "$BACKUP_PATH" == "/" ]; then
-        echo "** ERROR backup path is /, may delete wrong files"
+        logger "ERROR: backup path is /, may delete wrong files"
         exit 1
     else
         find $BACKUP_PATH -mindepth 1 -type d ! -name "*$TODAY*" -exec rm -rfv {} +
     fi
 fi
 
-echo "** INFO backup finished successfully!"
+logger "INFO: backup finished successfully!"
 aws s3 ls ${S3_BUCKET}/${TODAY}/
